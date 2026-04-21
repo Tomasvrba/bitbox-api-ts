@@ -25,9 +25,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:watch": "vitest",
     "proto:sync": "cp ../bitbox02-firmware/messages/*.proto messages/",
     "proto:gen": "buf generate",
     "proto:check": "buf generate && git diff --exit-code -- src/proto/gen"
