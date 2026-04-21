@@ -1,0 +1,52 @@
+{
+  "name": "bitbox-api-ts",
+  "version": "0.1.0",
+  "description": "A pure TypeScript library to interact with BitBox hardware wallets.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@stylistic/eslint-plugin": "5.10.0",
+    "@types/node": "25.6.0",
+    "eslint": "10.2.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.59.0",
+    "vitest": "4.1.5"
+  },
+  "keywords": [
+    "bitbox",
+    "bitbox02",
+    "hardware-wallet",
+    "ethereum",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BitBoxSwiss/bitbox-api-ts"
+  },
+  "homepage": "https://bitbox.swiss/"
+}
