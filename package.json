@@ -25,10 +25,16 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "proto:sync": "cp ../bitbox02-firmware/messages/*.proto messages/",
+    "proto:gen": "buf generate",
+    "proto:check": "buf generate && git diff --exit-code -- src/proto/gen"
   },
   "devDependencies": {
+    "@bufbuild/buf": "1.68.3",
+    "@bufbuild/protoc-gen-es": "2.11.0",
     "@eslint/js": "10.0.1",
     "@stylistic/eslint-plugin": "5.10.0",
     "@types/node": "25.6.0",
@@ -48,5 +54,8 @@
     "type": "git",
     "url": "https://github.com/BitBoxSwiss/bitbox-api-ts"
   },
-  "homepage": "https://bitbox.swiss/"
+  "homepage": "https://bitbox.swiss/",
+  "dependencies": {
+    "@bufbuild/protobuf": "2.11.0"
+  }
 }

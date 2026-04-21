@@ -1,0 +1,9 @@
+version: v2
+inputs:
+  - directory: messages
+plugins:
+  - local: ./node_modules/.bin/protoc-gen-es
+    out: src/proto/gen
+    opt:
+      - target=ts
+      - import_extension=.js
