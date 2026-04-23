@@ -18,3 +18,9 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+
+# Simulator smoke test. The suite itself self-skips on non-Linux/non-x64, but
+# skipping here too avoids downloading binaries on unsupported runners.
+if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ] && [ "${SKIP_SIMULATOR:-}" != "1" ]; then
+    npm run test:sim
+fi

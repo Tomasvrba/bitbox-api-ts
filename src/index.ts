@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+  connectAuto,
+  connectBridge,
+  connectWebHID,
+} from './internal/connect.js';
+import type { HwwCommunication } from './internal/hww.js';
+
 const ERROR_CODE_UNKNOWN_JS = 'unknown-js';
 const ERROR_CODE_UNSUPPORTED = 'unsupported';
 const ERROR_CODE_NOT_IMPLEMENTED = 'not-implemented';
@@ -203,23 +210,35 @@ export type Error = {
 /**
  * Connect to a BitBox02 using WebHID. WebHID is mainly supported by Chrome.
  */
-export function bitbox02ConnectWebHID(_on_close_cb: OnCloseCb): Promise<BitBox> {
-  return Promise.reject(notImplementedError('bitbox02ConnectWebHID'));
+export async function bitbox02ConnectWebHID(on_close_cb: OnCloseCb): Promise<BitBox> {
+  try {
+    return await connectWebHID(on_close_cb);
+  } catch (err) {
+    throw ensureError(err);
+  }
 }
 
 /**
  * Connect to a BitBox02 by using the BitBoxBridge service.
  */
-export function bitbox02ConnectBridge(_on_close_cb: OnCloseCb): Promise<BitBox> {
-  return Promise.reject(notImplementedError('bitbox02ConnectBridge'));
+export async function bitbox02ConnectBridge(on_close_cb: OnCloseCb): Promise<BitBox> {
+  try {
+    return await connectBridge(on_close_cb);
+  } catch (err) {
+    throw ensureError(err);
+  }
 }
 
 /**
  * Connect to a BitBox02 using WebHID if available. If WebHID is not available, we attempt to
  * connect using the BitBoxBridge.
  */
-export function bitbox02ConnectAuto(_on_close_cb: OnCloseCb): Promise<BitBox> {
-  return Promise.reject(notImplementedError('bitbox02ConnectAuto'));
+export async function bitbox02ConnectAuto(on_close_cb: OnCloseCb): Promise<BitBox> {
+  try {
+    return await connectAuto(on_close_cb);
+  } catch (err) {
+    throw ensureError(err);
+  }
 }
 
 /**
@@ -289,6 +308,20 @@ export class BitBox {
   unlockAndPair(): Promise<PairingBitBox> {
     return Promise.reject(notImplementedError('unlockAndPair'));
   }
+}
+
+type BitBoxState = {
+  hww: HwwCommunication;
+  close: () => void;
+};
+
+const BITBOX_STATE = new WeakMap<BitBox, BitBoxState>();
+
+/** @internal */
+export function makeBitBox(hww: HwwCommunication, close: () => void): BitBox {
+  const bitbox = new BitBox();
+  BITBOX_STATE.set(bitbox, { hww, close });
+  return bitbox;
 }
 
 /**
