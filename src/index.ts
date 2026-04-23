@@ -1,1 +1,516 @@
-export {};
+// SPDX-License-Identifier: Apache-2.0
+
+const ERROR_CODE_UNKNOWN_JS = 'unknown-js';
+const ERROR_CODE_UNSUPPORTED = 'unsupported';
+const ERROR_CODE_NOT_IMPLEMENTED = 'not-implemented';
+const ERROR_CODE_USER_ABORT = 'user-abort';
+const ERROR_CODE_BITBOX_USER_ABORT = 'bitbox-user-abort';
+
+function unsupportedError(method: string): Error {
+  return {
+    code: ERROR_CODE_UNSUPPORTED,
+    message: `${method} is not supported in bitbox-api-ts`,
+  };
+}
+
+function notImplementedError(method: string): Error {
+  return {
+    code: ERROR_CODE_NOT_IMPLEMENTED,
+    message: `${method} is not yet implemented in bitbox-api-ts`,
+  };
+}
+
+export type OnCloseCb = undefined | (() => void);
+
+export type Product =
+  | 'unknown'
+  | 'bitbox02-multi'
+  | 'bitbox02-btconly'
+  | 'bitbox02-nova-multi'
+  | 'bitbox02-nova-btconly';
+
+export type BtcCoin = 'btc' | 'tbtc' | 'ltc' | 'tltc' | 'rbtc';
+export type BtcFormatUnit = 'default' | 'sat';
+export type XPubType =
+  | 'tpub'
+  | 'xpub'
+  | 'ypub'
+  | 'zpub'
+  | 'vpub'
+  | 'upub'
+  | 'Vpub'
+  | 'Zpub'
+  | 'Upub'
+  | 'Ypub';
+export type BtcXPubsType = 'tpub' | 'xpub';
+export type Keypath = string | number[];
+export type XPub = string;
+
+export type DeviceInfo = {
+  name: string;
+  initialized: boolean;
+  version: string;
+  mnemonicPassphraseEnabled: boolean;
+  securechipModel: string;
+  monotonicIncrementsRemaining: number;
+};
+
+export type BtcSimpleType = 'p2wpkhP2sh' | 'p2wpkh' | 'p2tr';
+
+export type KeyOriginInfo = {
+  rootFingerprint?: string;
+  keypath?: Keypath;
+  xpub: XPub;
+};
+
+export type BtcRegisterXPubType = 'autoElectrum' | 'autoXpubTpub';
+export type BtcMultisigScriptType = 'p2wsh' | 'p2wshP2sh';
+
+export type BtcMultisig = {
+  threshold: number;
+  xpubs: XPub[];
+  ourXpubIndex: number;
+  scriptType: BtcMultisigScriptType;
+};
+
+export type BtcPolicy = { policy: string; keys: KeyOriginInfo[] };
+
+export type BtcScriptConfig =
+  | { simpleType: BtcSimpleType }
+  | { multisig: BtcMultisig }
+  | { policy: BtcPolicy };
+
+export type BtcScriptConfigWithKeypath = {
+  scriptConfig: BtcScriptConfig;
+  keypath: Keypath;
+};
+
+export type BtcSignMessageSignature = {
+  sig: Uint8Array;
+  recid: bigint;
+  electrumSig65: Uint8Array;
+};
+
+export type BtcXpubs = string[];
+
+export type EthTransaction = {
+  nonce: Uint8Array;
+  gasPrice: Uint8Array;
+  gasLimit: Uint8Array;
+  recipient: Uint8Array;
+  value: Uint8Array;
+  data: Uint8Array;
+};
+
+export type Eth1559Transaction = {
+  chainId: number;
+  nonce: Uint8Array;
+  maxPriorityFeePerGas: Uint8Array;
+  maxFeePerGas: Uint8Array;
+  gasLimit: Uint8Array;
+  recipient: Uint8Array;
+  value: Uint8Array;
+  data: Uint8Array;
+};
+
+export type EthSignature = {
+  r: Uint8Array;
+  s: Uint8Array;
+  v: Uint8Array;
+};
+
+export type EthAddressCase = 'upper' | 'lower' | 'mixed';
+
+export type CardanoXpub = Uint8Array;
+export type CardanoXpubs = CardanoXpub[];
+export type CardanoNetwork = 'mainnet' | 'testnet';
+
+export type CardanoScriptConfig = {
+  pkhSkh: {
+    keypathPayment: Keypath;
+    keypathStake: Keypath;
+  };
+};
+
+export type CardanoInput = {
+  keypath: Keypath;
+  prevOutHash: Uint8Array;
+  prevOutIndex: number;
+};
+
+export type CardanoAssetGroupToken = {
+  assetName: Uint8Array;
+  value: bigint;
+};
+
+export type CardanoAssetGroup = {
+  policyId: Uint8Array;
+  tokens: CardanoAssetGroupToken[];
+};
+
+export type CardanoOutput = {
+  encodedAddress: string;
+  value: bigint;
+  scriptConfig?: CardanoScriptConfig;
+  assetGroups?: CardanoAssetGroup[];
+};
+
+export type CardanoDrepType =
+  | 'keyHash'
+  | 'scriptHash'
+  | 'alwaysAbstain'
+  | 'alwaysNoConfidence';
+
+export type CardanoCertificate =
+  | { stakeRegistration: { keypath: Keypath } }
+  | { stakeDeregistration: { keypath: Keypath } }
+  | { stakeDelegation: { keypath: Keypath; poolKeyhash: Uint8Array } }
+  | { voteDelegation: { keypath: Keypath; type: CardanoDrepType; drepCredhash?: Uint8Array } };
+
+export type CardanoWithdrawal = {
+  keypath: Keypath;
+  value: bigint;
+};
+
+export type CardanoTransaction = {
+  network: CardanoNetwork;
+  inputs: CardanoInput[];
+  outputs: CardanoOutput[];
+  fee: bigint;
+  ttl: bigint;
+  certificates: CardanoCertificate[];
+  withdrawals: CardanoWithdrawal[];
+  validityIntervalStart: bigint;
+  allowZeroTTL: boolean;
+  tagCborSets: boolean;
+};
+
+export type CardanoShelleyWitness = {
+  signature: Uint8Array;
+  publicKey: Uint8Array;
+};
+
+export type CardanoSignTransactionResult = {
+  shelleyWitnesses: CardanoShelleyWitness[];
+};
+
+export type Error = {
+  code: string;
+  message: string;
+  err?: any;
+};
+
+/**
+ * Connect to a BitBox02 using WebHID. WebHID is mainly supported by Chrome.
+ */
+export function bitbox02ConnectWebHID(_on_close_cb: OnCloseCb): Promise<BitBox> {
+  return Promise.reject(notImplementedError('bitbox02ConnectWebHID'));
+}
+
+/**
+ * Connect to a BitBox02 by using the BitBoxBridge service.
+ */
+export function bitbox02ConnectBridge(_on_close_cb: OnCloseCb): Promise<BitBox> {
+  return Promise.reject(notImplementedError('bitbox02ConnectBridge'));
+}
+
+/**
+ * Connect to a BitBox02 using WebHID if available. If WebHID is not available, we attempt to
+ * connect using the BitBoxBridge.
+ */
+export function bitbox02ConnectAuto(_on_close_cb: OnCloseCb): Promise<BitBox> {
+  return Promise.reject(notImplementedError('bitbox02ConnectAuto'));
+}
+
+/**
+ * Run any exception raised by this library through this function to get a typed error.
+ *
+ * If the input already looks like a typed `{ code: string, message: string }`, it is returned
+ * as-is. Otherwise it is wrapped as `{ code: 'unknown-js', message: 'Unknown Javascript error',
+ * err: <original> }`.
+ */
+export function ensureError(err: any): Error {
+  if (
+    err !== null &&
+    typeof err === 'object' &&
+    typeof err.code === 'string' &&
+    typeof err.message === 'string'
+  ) {
+    return err as Error;
+  }
+  return {
+    code: ERROR_CODE_UNKNOWN_JS,
+    message: 'Unknown Javascript error',
+    err,
+  };
+}
+
+/** Returns true if the user cancelled an operation. */
+export function isUserAbort(err: Error): boolean {
+  return err.code === ERROR_CODE_USER_ABORT || err.code === ERROR_CODE_BITBOX_USER_ABORT;
+}
+
+/**
+ * Identifies the case of the recipient address given as hexadecimal string.
+ * Returns 'upper' if every alphabetic char is uppercase, 'lower' if every
+ * alphabetic char is lowercase, 'mixed' otherwise. Non-alphabetic characters
+ * are ignored.
+ */
+export function ethIdentifyCase(recipientAddress: string): EthAddressCase {
+  let hasUpper = false;
+  let hasLower = false;
+  for (const c of recipientAddress) {
+    if (c >= 'A' && c <= 'Z') {
+      hasUpper = true;
+    } else if (c >= 'a' && c <= 'z') {
+      hasLower = true;
+    }
+    if (hasUpper && hasLower) {
+      return 'mixed';
+    }
+  }
+  if (hasLower) {
+    return 'lower';
+  }
+  return 'upper';
+}
+
+/**
+ * BitBox client. Instantiate it using `bitbox02ConnectAuto()`.
+ */
+export class BitBox {
+  /** No-op; retained for ABI compatibility with the wasm-bindgen output. */
+  free(): void {}
+
+  /**
+   * Invokes the device unlock and pairing. After this, stop using this instance and continue
+   * with the returned instance of type `PairingBitBox`.
+   */
+  unlockAndPair(): Promise<PairingBitBox> {
+    return Promise.reject(notImplementedError('unlockAndPair'));
+  }
+}
+
+/**
+ * BitBox in the pairing state. Use `getPairingCode()` to display the pairing code to the user and
+ * `waitConfirm()` to proceed to the paired state.
+ */
+export class PairingBitBox {
+  /** No-op; retained for ABI compatibility with the wasm-bindgen output. */
+  free(): void {}
+
+  /**
+   * If a pairing code confirmation is required, this returns the pairing code. You must display
+   * it to the user and then call `waitConfirm()` to wait until the user confirms the code on
+   * the BitBox.
+   *
+   * If the BitBox was paired before and the pairing was persisted, the pairing step is
+   * skipped. In this case, `undefined` is returned. Also in this case, call `waitConfirm()` to
+   * establish the encrypted connection.
+   */
+  getPairingCode(): string | undefined {
+    return undefined;
+  }
+
+  /**
+   * Proceed to the paired state. After this, stop using this instance and continue with the
+   * returned instance of type `PairedBitBox`.
+   */
+  waitConfirm(): Promise<PairedBitBox> {
+    return Promise.reject(notImplementedError('waitConfirm'));
+  }
+}
+
+/**
+ * Paired BitBox. This is where you can invoke most API functions like getting xpubs, displaying
+ * receive addresses, etc.
+ */
+export class PairedBitBox {
+  private _onCloseCb: OnCloseCb = undefined;
+  private _closed: boolean = false;
+
+  /** No-op; retained for ABI compatibility with the wasm-bindgen output. */
+  free(): void {}
+
+  /**
+   * Closes the BitBox connection. This also invokes the `on_close_cb` callback which was
+   * provided to the connect method creating the connection. Guarded against double-invocation.
+   */
+  close(): void {
+    if (this._closed) {
+      return;
+    }
+    this._closed = true;
+    if (this._onCloseCb !== undefined) {
+      this._onCloseCb();
+    }
+  }
+
+  deviceInfo(): Promise<DeviceInfo> {
+    return Promise.reject(notImplementedError('deviceInfo'));
+  }
+
+  /** Returns which product we are connected to. */
+  product(): Product {
+    throw notImplementedError('product');
+  }
+
+  /** Returns the firmware version, e.g. "9.18.0". */
+  version(): string {
+    throw notImplementedError('version');
+  }
+
+  /** Returns the hex-encoded 4-byte root fingerprint. */
+  rootFingerprint(): Promise<string> {
+    return Promise.reject(notImplementedError('rootFingerprint'));
+  }
+
+  /** Show recovery words on the Bitbox. */
+  showMnemonic(): Promise<void> {
+    return Promise.reject(notImplementedError('showMnemonic'));
+  }
+
+  /** Invokes the password change workflow on the device. */
+  changePassword(): Promise<void> {
+    return Promise.reject(notImplementedError('changePassword'));
+  }
+
+  btcXpub(
+    _coin: BtcCoin,
+    _keypath: Keypath,
+    _xpub_type: XPubType,
+    _display: boolean,
+  ): Promise<string> {
+    return Promise.reject(unsupportedError('btcXpub'));
+  }
+
+  btcXpubs(
+    _coin: BtcCoin,
+    _keypaths: Keypath[],
+    _xpub_type: BtcXPubsType,
+  ): Promise<BtcXpubs> {
+    return Promise.reject(unsupportedError('btcXpubs'));
+  }
+
+  btcIsScriptConfigRegistered(
+    _coin: BtcCoin,
+    _script_config: BtcScriptConfig,
+    _keypath_account?: Keypath,
+  ): Promise<boolean> {
+    return Promise.reject(unsupportedError('btcIsScriptConfigRegistered'));
+  }
+
+  btcRegisterScriptConfig(
+    _coin: BtcCoin,
+    _script_config: BtcScriptConfig,
+    _keypath_account: Keypath | undefined,
+    _xpub_type: BtcRegisterXPubType,
+    _name?: string,
+  ): Promise<void> {
+    return Promise.reject(unsupportedError('btcRegisterScriptConfig'));
+  }
+
+  btcAddress(
+    _coin: BtcCoin,
+    _keypath: Keypath,
+    _script_config: BtcScriptConfig,
+    _display: boolean,
+  ): Promise<string> {
+    return Promise.reject(unsupportedError('btcAddress'));
+  }
+
+  btcSignPSBT(
+    _coin: BtcCoin,
+    _psbt: string,
+    _force_script_config: BtcScriptConfigWithKeypath | undefined,
+    _format_unit: BtcFormatUnit,
+  ): Promise<string> {
+    return Promise.reject(unsupportedError('btcSignPSBT'));
+  }
+
+  btcSignMessage(
+    _coin: BtcCoin,
+    _script_config: BtcScriptConfigWithKeypath,
+    _msg: Uint8Array,
+  ): Promise<BtcSignMessageSignature> {
+    return Promise.reject(unsupportedError('btcSignMessage'));
+  }
+
+  /** Does this device support ETH functionality? Currently this means BitBox02 Multi. */
+  ethSupported(): boolean {
+    return false;
+  }
+
+  ethXpub(_keypath: Keypath): Promise<string> {
+    return Promise.reject(notImplementedError('ethXpub'));
+  }
+
+  ethAddress(_chain_id: bigint, _keypath: Keypath, _display: boolean): Promise<string> {
+    return Promise.reject(notImplementedError('ethAddress'));
+  }
+
+  ethSignTransaction(
+    _chain_id: bigint,
+    _keypath: Keypath,
+    _tx: EthTransaction,
+    _address_case?: EthAddressCase,
+  ): Promise<EthSignature> {
+    return Promise.reject(notImplementedError('ethSignTransaction'));
+  }
+
+  ethSign1559Transaction(
+    _keypath: Keypath,
+    _tx: Eth1559Transaction,
+    _address_case?: EthAddressCase,
+  ): Promise<EthSignature> {
+    return Promise.reject(notImplementedError('ethSign1559Transaction'));
+  }
+
+  ethSignMessage(
+    _chain_id: bigint,
+    _keypath: Keypath,
+    _msg: Uint8Array,
+  ): Promise<EthSignature> {
+    return Promise.reject(notImplementedError('ethSignMessage'));
+  }
+
+  ethSignTypedMessage(
+    _chain_id: bigint,
+    _keypath: Keypath,
+    _msg: any,
+    _use_antiklepto?: boolean,
+  ): Promise<EthSignature> {
+    return Promise.reject(notImplementedError('ethSignTypedMessage'));
+  }
+
+  /** Does this device support Cardano functionality? Currently this means BitBox02 Multi. */
+  cardanoSupported(): boolean {
+    return false;
+  }
+
+  cardanoXpubs(_keypaths: Keypath[]): Promise<CardanoXpubs> {
+    return Promise.reject(unsupportedError('cardanoXpubs'));
+  }
+
+  cardanoAddress(
+    _network: CardanoNetwork,
+    _script_config: CardanoScriptConfig,
+    _display: boolean,
+  ): Promise<string> {
+    return Promise.reject(unsupportedError('cardanoAddress'));
+  }
+
+  cardanoSignTransaction(
+    _transaction: CardanoTransaction,
+  ): Promise<CardanoSignTransactionResult> {
+    return Promise.reject(unsupportedError('cardanoSignTransaction'));
+  }
+
+  /**
+   * Invokes the BIP85-BIP39 workflow on the device, letting the user select the number of words
+   * (12, 28, 24) and an index and display a derived BIP-39 mnemonic.
+   */
+  bip85AppBip39(): Promise<void> {
+    return Promise.reject(unsupportedError('bip85AppBip39'));
+  }
+}
