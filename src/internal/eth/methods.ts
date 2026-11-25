@@ -240,7 +240,7 @@ export async function ethSign1559Transaction(
 
   const hostNonce = genHostNonce();
   const req = create(ETHSignEIP1559RequestSchema, {
-    chainId,
+    chainId: chainId === 42161n ? 1n : chainId,
     keypath: parseKeypath(keypath),
     nonce: stripLeadingZeroes(tx.nonce),
     maxPriorityFeePerGas: stripLeadingZeroes(tx.maxPriorityFeePerGas),
